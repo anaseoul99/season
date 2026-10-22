@@ -9,6 +9,9 @@ let fft;
 
 let isStopped = true;
 
+const DESIGN_W = 1242;
+const DESIGN_H = 886;
+
 // 처음 작품 생성
 function preload() {
   bg = loadImage("bg.png");
@@ -21,7 +24,8 @@ function preload() {
 }
 
 function setup() {
-  createCanvas(1242, 886);
+  createCanvas(windowWidth, windowHeight);
+  imageMode(CORNER);
 
   song.setVolume(1);
 
@@ -41,6 +45,25 @@ function draw() {
     drawMagicDust();
     return;
   }
+
+
+  // 원본 작품 비율을 유지하면서 화면 안에 맞춤
+  const scaleValue = min(
+    width / DESIGN_W,
+    height / DESIGN_H
+  );
+
+  const drawW = DESIGN_W * scaleValue;
+  const drawH = DESIGN_H * scaleValue;
+
+  const offsetX = (width - drawW) / 2;
+  const offsetY = (height - drawH) / 2;
+
+  push();
+
+  translate(offsetX, offsetY);
+  scale(scaleValue);
+
 
   // 실행 중일 때만 동물 이동
   drawMagicDust();
