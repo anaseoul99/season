@@ -1,13 +1,11 @@
-//v1
+
 
 let bg;
 let imgs = [];
 let animals = [];
 let sticks = [];
 
-let song;
-let fft;
-
+let speaker;
 let isStopped = true;
 let lastTrigger = 0;
 
@@ -20,18 +18,11 @@ function preload() {
   imgs.push(loadImage("1111.png"));
   imgs.push(loadImage("22222.png"));
   imgs.push(loadImage("33333.png"));
-
-  song = loadSound("wave-2.mp3");
 }
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
   imageMode(CORNER);
-
-  song.setVolume(1);
-
-  fft = new p5.FFT();
-  fft.setInput(song);
 
   generateArtwork();
 }
@@ -123,29 +114,14 @@ function generateLayout() {
 function drawAnimals() {
   imageMode(CENTER);
 
-  let bass = 0;
-  let mid = 0;
-  let treble = 0;
-
-  if (song && song.isPlaying()) {
-    fft.analyze();
-    bass = fft.getEnergy("bass");
-    mid = fft.getEnergy("mid");
-    treble = fft.getEnergy("treble");
-  }
-
   for (let a of animals) {
     a.x += a.speedX;
     a.y += a.speedY;
     a.angle += a.rotationSpeed;
 
-    let s = map(bass, 0, 255, 1, 1.15);
-
     push();
     translate(a.x, a.y);
-    rotate(a.angle + sin(frameCount * 0.025 + a.x) * map(mid, 0, 255, 0, 0.12));
-    scale(s);
-    tint(255, map(treble, 0, 255, 180, 255));
+    rotate(a.angle + sin(frameCount * 0.025 + a.x) * 0.04);
     image(a.img, 0, 0, a.w, a.h);
     pop();
 
@@ -181,22 +157,34 @@ function drawAnimalsStill() {
   }
 }
 
+function speakerAudio() {
+  if (!speaker) {
+    speaker = new Audio("wave-2.mp3");
+    speaker.setAttribute("playsinline", "");
+    speaker.preload = "auto";
+  }
+  return speaker;
+}
+
 function triggerSound() {
   if (millis() - lastTrigger < 400) return;
   lastTrigger = millis();
 
-  if (!isStopped) {
-    isStopped = true;
+  const audio = speakerAudio();
 
-    if (song.isPlaying()) {
-      song.stop();
-    }
+  if (!audio.paused) {
+    audio.pause();
+    audio.currentTime = 0;
+    isStopped = true;
   } else {
     isStopped = false;
     generateArtwork();
-    userStartAudio();
-    getAudioContext().resume();
-    song.play();
+    const played = audio.play();
+    if (played) {
+      played.catch(() => {
+        isStopped = true;
+      });
+    }
   }
 }
 
